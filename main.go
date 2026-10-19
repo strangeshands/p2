@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"math/rand/v2"
 	"sync"
-	"time"
 )
 
 type Party struct {
@@ -16,108 +14,6 @@ type Dungeon struct {
 	status        string
 	partiesServed int
 	totalTime     int
-}
-
-func validateInput(n int, t int, h int, d int, t1 int, t2 int) bool {
-	if n <= 0 || t < 0 || h < 0 || d < 0 || t1 <= 0 || t2 > 15 || t1 > t2 {
-		return false
-	}
-
-	return true
-}
-
-func calculateParties(t int, h int, d int) int {
-	p := 0
-	dpsGroup := d / 3
-
-	p = min(t, h, dpsGroup)
-
-	return p
-}
-
-func calculateRemaining(t int, h int, d int, p int) (int, int, int) {
-	remTanks := t - p
-	remHeal := h - p
-	remDPS := d - (p * 3)
-
-	return remTanks, remHeal, remDPS
-}
-
-func processParty(
-	party Party,
-	dungeons []Dungeon,
-	semaphore chan struct{},
-	mutex *sync.Mutex,
-	t1 int,
-	t2 int,
-	wg *sync.WaitGroup,
-) {
-	defer wg.Done()
-
-	defer func() {
-		<-semaphore
-	}()
-
-	mutex.Lock()
-	var dungeon *Dungeon
-	for i := range dungeons {
-		if dungeons[i].status == "empty" {
-			dungeon = &dungeons[i]
-			dungeon.status = "active"
-			break
-		}
-	}
-
-	duration := t1 + rand.IntN(t2-t1+1)
-
-	fmt.Printf(
-		"Dungeon %d: active | Party %d entered | Duration: %d seconds\n",
-		dungeon.id,
-		party.id,
-		duration,
-	)
-
-	printDungeonStatus(dungeons)
-
-	mutex.Unlock()
-
-	// Simulate dungeon
-	time.Sleep(time.Duration(duration) * time.Second)
-
-	// Party finishes
-	mutex.Lock()
-
-	dungeon.partiesServed++
-	dungeon.totalTime += duration
-	dungeon.status = "empty"
-
-	fmt.Printf(
-		"Dungeon %d: empty | Party %d finished\n",
-		dungeon.id,
-		party.id,
-	)
-
-	printDungeonStatus(dungeons)
-
-	mutex.Unlock()
-}
-
-func printDungeonStatus(d []Dungeon) {
-	fmt.Println("\n--- Current Dungeon Status ---")
-
-	for _, dungeon := range d {
-		fmt.Printf("Dungeon %d: %s\n", dungeon.id, dungeon.status)
-	}
-}
-
-func printDungeonSummary(d []Dungeon) {
-	fmt.Println("\n--- Dungeon Summary ---")
-
-	for _, dungeon := range d {
-		fmt.Printf("Dungeon %d\n", dungeon.id)
-		fmt.Printf("Parties Served: %d\n", dungeon.partiesServed)
-		fmt.Printf("Total Time Served: %d seconds\n\n", dungeon.totalTime)
-	}
 }
 
 func main() {
@@ -133,42 +29,60 @@ func main() {
 	var dungeons []Dungeon
 
 	// Ask for inputs
+	fmt.Print("\n ========= CONFIGURATION ========= \n\n")
+
+	fmt.Print(">> Number of maximum instances: ")
 	fmt.Scan(&maxInstances)
+
+	fmt.Print(">> Number of tanks: ")
 	fmt.Scan(&tanks)
+
+	fmt.Print(">> Number of healers: ")
 	fmt.Scan(&healers)
+
+	fmt.Print(">> Number of DPS: ")
 	fmt.Scan(&dps)
+
+	fmt.Print(">> Minimum time of instance: ")
 	fmt.Scan(&minTime)
+
+	fmt.Print(">> Maximum time of instance: ")
 	fmt.Scan(&maxTime)
 
-	if !validateInput(maxInstances, tanks, healers, dps, minTime, maxTime) {
-		fmt.Println("Invalid inputs. Please check.")
+	fmt.Print("\n ================================= \n\n")
+
+	if !ValidateInput(maxInstances, tanks, healers, dps, minTime, maxTime) {
+		fmt.Print(">> Invalid inputs. Please check.\n\n")
 		return
 	}
 
-	// Print values back
-	fmt.Printf("Instances %d\n", maxInstances)
-	fmt.Printf("Tanks %d\n", tanks)
-	fmt.Printf("Healers %d\n", healers)
-	fmt.Printf("DPS %d\n", dps)
-	fmt.Printf("Minimum Time %d\n", minTime)
-	fmt.Printf("Maximum Time %d\n", maxTime)
+	if !ValidateParty(tanks, healers, dps) {
+		fmt.Print("\n>> Roles are not sufficient to make a party.\n\n")
+		return
+	}
 
 	// Calculate parties
-	numParty := calculateParties(tanks, healers, dps)
-	fmt.Printf("Number of Possible Parties %d\n", numParty)
+	numParty := CalculateParties(tanks, healers, dps)
+	fmt.Printf(">> Possible Parties: %d\n", numParty)
 
 	// Calculate remaining
-	remT, remH, remD := calculateRemaining(tanks, healers, dps, numParty)
-	fmt.Printf("Remainings T H DPS %d %d %d\n", remT, remH, remD)
+	remT, remH, remD := CalculateRemaining(tanks, healers, dps, numParty)
+	fmt.Printf(">> Remainings tank, healer, and DPS: %d, %d, %d\n", remT, remH, remD)
 
-	// Assign prty
+	fmt.Print("\n ================================= \n\n")
+
+	fmt.Printf(">> Creating parties...\n")
+
+	// Assign party
 	for i := 1; i <= numParty; i++ {
 		p := Party{
 			id: i,
 		}
 		parties = append(parties, p)
 	}
-	fmt.Println(parties)
+	PrintParties(parties)
+
+	fmt.Printf("\n>> Creating dungeons...\n")
 
 	// Assign dungeons
 	for i := 1; i <= maxInstances; i++ {
@@ -181,7 +95,11 @@ func main() {
 
 		dungeons = append(dungeons, d)
 	}
-	fmt.Println(dungeons)
+	PrintDungeons(dungeons)
+
+	fmt.Print("\n ================================= \n")
+
+	fmt.Print("\n ========== !! START !! ========== \n\n")
 
 	// Workers
 	var wg sync.WaitGroup
@@ -191,9 +109,9 @@ func main() {
 	wg.Add(numParty)
 	for i := 0; i < numParty; i++ {
 		semaphore <- struct{}{}
-		go processParty(parties[i], dungeons, semaphore, &mutex, minTime, maxTime, &wg)
+		go ProcessParty(parties[i], dungeons, semaphore, &mutex, minTime, maxTime, &wg)
 	}
 	wg.Wait()
 
-	printDungeonSummary(dungeons)
+	PrintDungeonSummary(dungeons)
 }
