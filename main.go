@@ -28,26 +28,24 @@ func main() {
 	var parties []Party
 	var dungeons []Dungeon
 
+	var err error
+
+	maxInstances, tanks, healers, dps, minTime, maxTime, err = LoadConfig("config.txt")
+
+	if err != nil {
+		fmt.Printf(">> Error loading config: %v\n", err)
+		return
+	}
+
 	// Ask for inputs
 	fmt.Print("\n ========= CONFIGURATION ========= \n\n")
 
-	fmt.Print(">> Number of maximum instances: ")
-	fmt.Scan(&maxInstances)
-
-	fmt.Print(">> Number of tanks: ")
-	fmt.Scan(&tanks)
-
-	fmt.Print(">> Number of healers: ")
-	fmt.Scan(&healers)
-
-	fmt.Print(">> Number of DPS: ")
-	fmt.Scan(&dps)
-
-	fmt.Print(">> Minimum time of instance: ")
-	fmt.Scan(&minTime)
-
-	fmt.Print(">> Maximum time of instance: ")
-	fmt.Scan(&maxTime)
+	fmt.Printf(">> Maximum instances: %d\n", maxInstances)
+	fmt.Printf(">> Tanks: %d\n", tanks)
+	fmt.Printf(">> Healers: %d\n", healers)
+	fmt.Printf(">> DPS: %d\n", dps)
+	fmt.Printf(">> Minimum instance time: %d seconds\n", minTime)
+	fmt.Printf(">> Maximum instance time: %d seconds\n", maxTime)
 
 	fmt.Print("\n ================================= \n\n")
 
@@ -99,7 +97,7 @@ func main() {
 
 	fmt.Print("\n ================================= \n")
 
-	fmt.Print("\n ========== !! START !! ========== \n\n")
+	fmt.Print("\n ========== !! START !! ========== \n")
 
 	// Workers
 	var wg sync.WaitGroup
@@ -112,6 +110,8 @@ func main() {
 		go ProcessParty(parties[i], dungeons, semaphore, &mutex, minTime, maxTime, &wg)
 	}
 	wg.Wait()
+
+	fmt.Print("\n ================================= \n")
 
 	PrintDungeonSummary(dungeons)
 }

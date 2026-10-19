@@ -35,7 +35,7 @@ func ProcessParty(
 	duration := t1 + rand.IntN(t2-t1+1)
 
 	fmt.Printf(
-		"Dungeon %d: active | Party %d entered | Duration: %d seconds\n",
+		"\n>> Dungeon %d: active | Party %d entered | Duration: %d seconds\n",
 		dungeon.id,
 		party.id,
 		duration,
@@ -56,7 +56,7 @@ func ProcessParty(
 	dungeon.status = "empty"
 
 	fmt.Printf(
-		"Dungeon %d: empty | Party %d finished\n",
+		"\n>> Dungeon %d: empty | Party %d finished\n",
 		dungeon.id,
 		party.id,
 	)
