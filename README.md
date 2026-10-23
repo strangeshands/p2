@@ -30,7 +30,7 @@ Standard:
 go run .
 ```
 
-Using the run script:
+Using the run script (**MacOS only**):
 
 ```bash
 bash run.sh
