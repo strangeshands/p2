@@ -65,7 +65,7 @@ func main() {
 
 	// Calculate remaining
 	remT, remH, remD := CalculateRemaining(tanks, healers, dps, numParty)
-	fmt.Printf(">> Remainings tank, healer, and DPS: %d, %d, %d\n", remT, remH, remD)
+	fmt.Printf(">> Remaining tank, healer, and DPS (No party formed): %d, %d, %d\n", remT, remH, remD)
 
 	fmt.Print("\n ================================= \n\n")
 
