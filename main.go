@@ -6,7 +6,10 @@ import (
 )
 
 type Party struct {
-	id int
+	id     int
+	tank   int
+	healer int
+	dps    int
 }
 
 type Dungeon struct {
@@ -15,6 +18,12 @@ type Dungeon struct {
 	partiesServed int
 	totalTime     int
 }
+
+// Constants
+const P_TANK int = 1
+const P_HEAL int = 1
+const P_DPS int = 3
+const MAX_DURATION int = 15
 
 func main() {
 	// Variables
@@ -63,10 +72,6 @@ func main() {
 	numParty := CalculateParties(tanks, healers, dps)
 	fmt.Printf(">> Possible Parties: %d\n", numParty)
 
-	// Calculate remaining
-	remT, remH, remD := CalculateRemaining(tanks, healers, dps, numParty)
-	fmt.Printf(">> Remaining tank, healer, and DPS (No party formed): %d, %d, %d\n", remT, remH, remD)
-
 	fmt.Print("\n ================================= \n\n")
 
 	fmt.Printf(">> Creating parties...\n")
@@ -74,11 +79,19 @@ func main() {
 	// Assign party
 	for i := 1; i <= numParty; i++ {
 		p := Party{
-			id: i,
+			id:     i,
+			tank:   P_TANK,
+			healer: P_HEAL,
+			dps:    P_DPS,
 		}
+
+		tanks -= P_TANK
+		healers -= P_HEAL
+		dps -= P_DPS
+
 		parties = append(parties, p)
 	}
-	PrintParties(parties)
+	PrintParties(parties, tanks, healers, dps)
 
 	fmt.Printf("\n>> Creating dungeons...\n")
 

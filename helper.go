@@ -69,7 +69,15 @@ func LoadConfig(filename string) (int, int, int, int, int, int, error) {
 }
 
 func ValidateInput(n int, t int, h int, d int, t1 int, t2 int) bool {
-	if n <= 0 || t < 0 || h < 0 || d < 0 || t1 <= 0 || t2 > 15 || t1 > t2 {
+	if n <= 0 || t < 0 || h < 0 || d < 0 || t1 < 0 || t2 < 0 || t1 > t2 || t2 > MAX_DURATION {
+		fmt.Println("--- RULES ---")
+		fmt.Println(">> Maximum instances must be greater than 0.")
+		fmt.Println(">> Tanks, healers, and DPS must be nonnegative.")
+		fmt.Println(">> Minimum and maximum time must be nonnegative.")
+		fmt.Println(">> Minimum time must be less than maximum time.")
+		fmt.Printf(">> Maximum time must not exceed %d seconds.\n", MAX_DURATION)
+		fmt.Println("-------------\n")
+
 		return false
 	}
 
@@ -104,15 +112,7 @@ func CalculateParties(t int, h int, d int) int {
 	return p
 }
 
-func CalculateRemaining(t int, h int, d int, p int) (int, int, int) {
-	remTanks := t - p
-	remHeal := h - p
-	remDPS := d - (p * 3)
-
-	return remTanks, remHeal, remDPS
-}
-
-func PrintParties(parties []Party) {
+func PrintParties(parties []Party, t int, h int, d int) {
 	fmt.Println("\n--- Parties ---")
 
 	if len(parties) == 0 {
@@ -121,8 +121,10 @@ func PrintParties(parties []Party) {
 	}
 
 	for _, party := range parties {
-		fmt.Printf("Party %d\n", party.id)
+		fmt.Printf("Party %d -- T: %d | H: %d | DPS: %d\n", party.id, party.tank, party.healer, party.dps)
 	}
+
+	fmt.Printf("-- There are %d tank/s, %d healer/s and %d DPS remaining (no party formed).\n", t, h, d)
 }
 
 func PrintDungeons(dungeons []Dungeon) {
